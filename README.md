@@ -1,4 +1,4 @@
-﻿# PromptForge 🔨
+# PromptForge 🔨
 
 > Sistema completo para **gerar, organizar e gerenciar prompts para IAs** — com geração automática via GPT-4o-mini.
 
@@ -70,7 +70,7 @@ promptforge/
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/seu-usuario/promptforge.git
+git clone https://github.com/erickprogfirst/promptforge.git
 cd promptforge
 ```
 
@@ -151,6 +151,25 @@ O backend envia esses parâmetros ao GPT-4o-mini e retorna um prompt profissiona
 - A chave da OpenAI fica **somente no backend** (variável de ambiente)
 - O frontend **nunca** acessa a chave diretamente
 - O arquivo `.env` está no `.gitignore` e nunca é versionado
+
+---
+
+## 🤝 Como esse projeto foi criado
+
+Este projeto foi desenvolvido de forma **colaborativa com o [IBM Bob](https://www.ibm.com/bob)**, um assistente de engenharia de software com IA.
+
+O fluxo de desenvolvimento foi inteiramente conversacional — sem templates prontos, sem scaffolding automático. Cada arquivo foi discutido, projetado e implementado em conjunto:
+
+| Etapa | O que foi feito |
+|---|---|
+| Modelagem do banco | Definição das tabelas, relacionamentos 1:N e N:N, junction table, índices e versionamento |
+| Backend | FastAPI com routers, schemas Pydantic, ORM SQLAlchemy 2.0, dependency injection |
+| Frontend | Interface completa em HTML/CSS/JS puro com tema escuro, modais, filtros e busca |
+| Integração com IA | Rota de geração via OpenAI GPT-4o-mini com formulário guiado e salvamento direto |
+| Segurança | `.gitignore`, `.env.example`, chave restrita na OpenAI, chave nunca exposta no frontend |
+| Publicação | Repositório criado e publicado no GitHub via API, com README completo |
+
+> Todo o código foi escrito do zero durante a conversa — nenhuma linha foi copiada de template externo.
 
 ---
 
