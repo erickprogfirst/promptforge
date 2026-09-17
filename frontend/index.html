@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptForge 🔨</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ── Header ────────────────────────────────────────────────────────────── -->
+<header>
+  <h1>Prompt<span>Forge</span> 🔨</h1>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-secondary" onclick="openCategoriesModal()">📁 Categorias</button>
+    <button class="btn btn-secondary" onclick="openTagsModal()">🏷️ Tags</button>
+    <button class="btn btn-ai" onclick="openGenerator()">✨ Gerar com IA</button>
+    <button class="btn btn-primary" onclick="openCreate()">+ Novo Prompt</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <aside>
+    <div class="sidebar-section">
+      <h3>Categorias</h3>
+      <div id="categoryList"></div>
+    </div>
+    <div class="sidebar-section">
+      <h3>Tags</h3>
+      <div id="tagList" class="tags" style="padding:0 8px"></div>
+    </div>
+    <div class="sidebar-section" style="margin-top:auto">
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;font-size:13px;color:var(--muted)">
+        <input type="checkbox" id="favFilter" style="width:auto;accent-color:var(--accent)" />
+        ⭐ Somente favoritos
+      </label>
+    </div>
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────────────────────────────── -->
+  <main>
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Prompts</div></div>
+      <div class="stat-item"><div class="stat-value" id="statFavs">0</div><div class="stat-label">Favoritos</div></div>
+      <div class="stat-item"><div class="stat-value" id="statUses">0</div><div class="stat-label">Usos totais</div></div>
+      <div class="stat-item"><div class="stat-value" id="statCats">0</div><div class="stat-label">Categorias</div></div>
+    </div>
+
+    <!-- Busca -->
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="🔍 Buscar por título ou conteúdo..." />
+    </div>
+
+    <!-- Grid de prompts -->
+    <div class="prompts-grid" id="promptsGrid">
+      <div class="empty-state" style="grid-column:1/-1">
+        <div style="font-size:40px">🔨</div>
+        <p>Carregando prompts...</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ── Toast container ──────────────────────────────────────────────────── -->
+<div class="toast-container" id="toastContainer"></div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Criar / Editar Prompt                                            -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="promptModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Novo Prompt</h2>
+      <button class="modal-close" onclick="closeModal('promptModal')">×</button>
+    </div>
+
+    <div class="form-group">
+      <label>Título *</label>
+      <input type="text" id="promptTitle" placeholder="Ex.: Revisor de código Python" />
+    </div>
+
+    <div class="form-group">
+      <label>Conteúdo do Prompt *</label>
+      <textarea id="promptContent" rows="6" placeholder="Você é um especialista em..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Descrição (opcional)</label>
+      <input type="text" id="promptDesc" placeholder="Breve descrição do que este prompt faz" />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="promptCategory">
+          <option value="">Sem categoria</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Tags</label>
+      <div class="tags-picker" id="tagsPicker"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('promptModal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePrompt()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Detalhe do Prompt                                                -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="detailModal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <h2 id="detailTitle"></h2>
+      <button class="modal-close" onclick="closeModal('detailModal')">×</button>
+    </div>
+
+    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)">
+      <span>📁 Categoria: <strong id="detailCategory" style="color:var(--text)"></strong></span>
+      <span>▶ Usado <strong id="detailUseCount" style="color:var(--accent)"></strong>x</span>
+    </div>
+
+    <div class="form-group">
+      <label>Descrição</label>
+      <p id="detailDescription" style="font-size:13px;color:var(--muted)"></p>
+    </div>
+
+    <div class="form-group">
+      <label>Tags</label>
+      <div id="detailTags" class="tags"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Conteúdo</label>
+      <div class="copy-area">
+        <textarea id="detailContent" rows="8" readonly></textarea>
+        <button class="copy-btn" onclick="copyContent()">📋 Copiar</button>
+      </div>
+    </div>
+
+    <!-- Abas de histórico -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this,'tabVersions')">📜 Histórico de versões</div>
+    </div>
+    <div id="tabVersions">
+      <div id="versionList"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="detailFav">☆ Favoritar</button>
+      <button class="btn btn-secondary" id="detailEdit">✏️ Editar</button>
+      <button class="btn btn-primary" onclick="closeModal('detailModal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Gerenciar Categorias                                             -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="categoriesModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>📁 Categorias</h2>
+      <button class="modal-close" onclick="closeModal('categoriesModal')">×</button>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nome *</label>
+        <input type="text" id="catName" placeholder="Ex.: Escrita" />
+      </div>
+      <div class="form-group">
+        <label>Descrição</label>
+        <input type="text" id="catDesc" placeholder="Opcional" />
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="createCategory()">+ Criar categoria</button>
+
+    <hr style="border-color:var(--border);margin:4px 0" />
+
+    <div id="categoriesList" style="display:flex;flex-direction:column;gap:8px"></div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('categoriesModal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Gerenciar Tags                                                   -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="tagsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>🏷️ Tags</h2>
+      <button class="modal-close" onclick="closeModal('tagsModal')">×</button>
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <input type="text" id="tagName" placeholder="Nome da tag" style="flex:1" />
+      <button class="btn btn-primary" onclick="createTag()">+ Criar</button>
+    </div>
+
+    <div id="tagsList" style="display:flex;flex-direction:column;gap:8px"></div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('tagsModal')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL: Gerador de Prompt com IA                                         -->
+<!-- ════════════════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="generatorModal">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <h2>✨ Gerar Prompt com IA</h2>
+      <button class="modal-close" onclick="closeModal('generatorModal')">×</button>
+    </div>
+
+    <div class="form-group">
+      <label>Objetivo *</label>
+      <input type="text" id="genObjetivo" placeholder="Ex.: Revisar e melhorar textos acadêmicos" />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Público-alvo *</label>
+        <input type="text" id="genPublico" placeholder="Ex.: Estudantes universitários" />
+      </div>
+      <div class="form-group">
+        <label>Tom *</label>
+        <select id="genTom">
+          <option value="formal">Formal</option>
+          <option value="casual">Casual</option>
+          <option value="técnico">Técnico</option>
+          <option value="criativo">Criativo</option>
+          <option value="direto">Direto</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Formato de saída esperado *</label>
+      <select id="genFormato">
+        <option value="texto corrido">Texto corrido</option>
+        <option value="lista">Lista</option>
+        <option value="passo a passo">Passo a passo</option>
+        <option value="tabela">Tabela</option>
+        <option value="markdown">Markdown</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Contexto adicional (opcional)</label>
+      <textarea id="genContexto" rows="3" placeholder="Detalhes extras que ajudem a IA a gerar um prompt melhor..."></textarea>
+    </div>
+
+    <!-- Resultado -->
+    <div id="genResultBox" style="display:none">
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px">
+        Prompt gerado <span id="genTokens" style="color:var(--accent);margin-left:8px"></span>
+      </div>
+      <div class="copy-area">
+        <textarea id="genResult" rows="7" readonly></textarea>
+        <button class="copy-btn" onclick="copyGenerated()">📋 Copiar</button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('generatorModal')">Cancelar</button>
+      <button class="btn btn-secondary" id="genSaveBtn" style="display:none" onclick="saveGenerated()">💾 Salvar como prompt</button>
+      <button class="btn btn-ai" id="genBtn" onclick="runGenerate()">✨ Gerar</button>
+    </div>
+  </div>
+</div>
+
+
+<script src="app.js"></script>
+</body>
+</html>
